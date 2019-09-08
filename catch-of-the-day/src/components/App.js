@@ -4,11 +4,48 @@ import Inventory from "./Inventory";
 import Order from "./Order";
 import sampleFishes from "../sample-fishes";
 import Fish from "./Fish";
+import base from "../base";
+import PropTypes from "prop-types";
+
 class App extends React.Component {
   state = {
     fishes: {},
     order: {}
   };
+
+  static propTypes = {
+    match: PropTypes.object
+  };
+
+  componentDidMount() {
+    const params = this.props.match.params;
+    const storeName = params.storeId;
+
+    // first re-instate local storage
+    const localStorageRef = localStorage.getItem(storeName);
+
+    this.ref = base.syncState(`${storeName}/fishes`, {
+      context: this,
+      state: "fishes"
+    });
+
+    if (localStorageRef) {
+      this.setState({
+        order: JSON.parse(localStorageRef)
+      });
+    }
+  }
+
+  componentDidUpdate() {
+    const params = this.props.match.params;
+    localStorage.setItem(params.storeId, JSON.stringify(this.state.order));
+  }
+
+  /* Whenever a user clicks on the back button, the component will unmount and the following code will remove all sync with the database 
+and this way, there is no leakage in memory*/
+  componentWillUnmount() {
+    base.removeBinding(this.ref);
+  }
 
   addFish = fish => {
     // 1. Take a copy of the existing state
@@ -24,6 +61,18 @@ class App extends React.Component {
     });
   };
 
+  updateFish = (key, updatedFish) => {
+    const fishes = { ...this.state.fishes };
+    fishes[key] = updatedFish;
+    this.setState({ fishes });
+  };
+
+  deleteFish = key => {
+    const fishes = { ...this.state.fishes };
+    fishes[key] = null;
+    this.setState({ fishes });
+  };
+
   loadSampleFishes = () => {
     this.setState({ fishes: sampleFishes });
   };
@@ -36,6 +85,12 @@ class App extends React.Component {
     order[key] = order[key] + 1 || 1;
 
     // 3. Call setState to update our state object
+    this.setState({ order });
+  };
+
+  removeFromOrder = key => {
+    const order = { ...this.state.order };
+    delete order[key];
     this.setState({ order });
   };
 
@@ -55,10 +110,18 @@ class App extends React.Component {
             ))}
           </ul>
         </div>
-        <Order />
+        <Order
+          fishes={this.state.fishes}
+          order={this.state.order}
+          removeOrder={this.removeFromOrder}
+        />
         <Inventory
           addFish={this.addFish}
+          updateFish={this.updateFish}
+          deleteFish={this.deleteFish}
           loadSampleFishes={this.loadSampleFishes}
+          fishes={this.state.fishes}
+          storeId={this.props.match.params.storeId}
         />
       </div>
     );
