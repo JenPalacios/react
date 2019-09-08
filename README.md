@@ -136,3 +136,15 @@ Then, you would add a method inside the component called `handleClick` for the e
 - Push State: it allows us to change the URL without having to reload the page. This can be done with React Router.
 
 - Any images that need to be used, need to live inside the public folder.
+
+- SPREAD: a state has fishes and order. Insted of passing as props {this.state.fishes} and {this.state.order}, we could just pass {...this.state}. The spread operator will take care of assigning the fishes to the fishes and the orders to the order props. The problem with this, is that if something would get added to the state, and I don't wish to use the whole state on another component, then I would be passing trash. So it is better to explicitly pass the things that I need.
+
+- Whenever I see [object Object] logged somewhere, that is because the browser was expecting a string, and instead I passed an object. So, for example, if I would create an object like:
+
+```
+const jen = {
+  name: 'Jen'
+}
+```
+
+and if I would alert(jen), I would get [object Object] as an alert. This is becuase, the browser did: `jen.toString()`. To fix this, I simply need to use `JSON.stringify(jen)`.
